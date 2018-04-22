@@ -128,9 +128,11 @@ def user_feature_analyze():
             'appIdAction', 'ct', 'os', 'carrier', 'house']
     users = []
     counters = {}
+    feature_value_num = {}
     k = 0
     for key in keys:
-    	counters[key] = Counter()
+        counters[key] = Counter()
+        feature_value_num[key] = []
     with open('../data/preliminary_contest_data/userFeature.data', 'r') as f:
         for l in f:
             features = l.strip().split('|')
@@ -140,6 +142,7 @@ def user_feature_analyze():
 
             for f in features:
                 f_name = f.split(' ')[0]
+                feature_value_num[f_name].append(len(f.split(' '))-1)
                 for v in f.split(' ')[1:]:
                     user[f_name].append(int(v))
                     counters[f_name].update([int(v)])
@@ -148,8 +151,16 @@ def user_feature_analyze():
             if k % 100000 == 0:
                 print (k)
                 #break
+    user_num = len(users)
+    for key in keys:
+        appear_num = len(feature_value_num[key])
+        if appear_num < user_num:
+            feature_value_num[key].extend([0 for i in range(user_num - appear_num)])
+        else:
+            print ("appear all", key)
+    pk.dump(feature_value_num, open("../data/feature_value_num.pkl", "wb"))
     print (len(users))
-    pk.dump(counters, open("../data/counters.pkl", "wb"))
+    #pk.dump(counters, open("../data/counters.pkl", "wb"))
     return
 
 
@@ -159,6 +170,7 @@ def counter_analyze():
             'kw1', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall',
             'appIdAction', 'ct', 'os', 'carrier', 'house']
     counters = pk.load(open("../data/counters.pkl", "rb"))
+    '''
     for k in keys:
         print (k)
         wt = open("../data/features/%s.csv" % k, "w", encoding="utf-8")
@@ -170,8 +182,37 @@ def counter_analyze():
         csv_writer.writerows(sorted_counter_list)
         wt.close()
     #    break
-    #print (keys[12], len(counters[keys[12]]))
+    '''
+    for k in keys:
+        print (k)
+        counter_list = [counters[k][ck] for ck in counters[k]]
+        plt.figure()
+        plt.plot(counter_list)
+        plt.title("feature value count")
+        plt.xlabel("feature value index")
+        plt.ylabel("count")
+        plt.savefig("../pngs/%s_value_count.png" % k)
+
+    #key_index = 9
+    #print (keys[key_index], len(counters[keys[key_index]]))
+    #print (counters[keys[key_index]])
+    return 
+def feature_value_analyze():
+    keys = ['uid', 'age', 'gender', 'marriageStatus', 'education', 'consumptionAbility', 'LBS',
+            'interest1', 'interest2', 'interest3', 'interest4', 'interest5',
+            'kw1', 'kw2', 'kw3', 'topic1', 'topic2', 'topic3', 'appIdInstall',
+            'appIdAction', 'ct', 'os', 'carrier', 'house']
+    feature_value_num = pk.load(open("../data/feature_value_num.pkl", "rb"))
+    #print (feature_value_num['age'])
+    #return
+    for key in keys[1:]:
+        print (key)
+        print ("min", np.min(feature_value_num[key]))
+        print ("max", np.max(feature_value_num[key]))
+        print ("mid", np.median(feature_value_num[key]))
+        print ("mean", np.mean(feature_value_num[key]))
     return 
 
+#feature_value_analyze()
 counter_analyze()
 #user_feature_analyze()
